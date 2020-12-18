@@ -19,19 +19,18 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Properties;
 
-public class MultiPaxos extends GenericProtocol {
+public class Paxos extends GenericProtocol {
 
-    private static final Logger logger = LogManager.getLogger(MultiPaxos.class);
+    private static final Logger logger = LogManager.getLogger(protocols.agreement.Paxos.class);
 
     //Protocol information, to register in babel
     public final static short PROTOCOL_ID = 100;
-    public final static String PROTOCOL_NAME = "MultiPaxos";
+    public final static String PROTOCOL_NAME = "Paxos";
 
     private Host myself;
     private int joinedInstance;
     private List<Host> membership;
 
-    private Host leader;
     private int majority;
 
     private int numPrepareOks;
@@ -44,12 +43,11 @@ public class MultiPaxos extends GenericProtocol {
     //Highest ACCEPT value
     private byte[] highestAcceptValue;
 
-    public MultiPaxos(Properties props) throws IOException, HandlerRegistrationException {
+    public Paxos(Properties props) throws IOException, HandlerRegistrationException {
         super(PROTOCOL_NAME, PROTOCOL_ID);
         joinedInstance = -1; //-1 means we have not yet joined the system
         membership = null;
 
-        leader = null;
         majority = numPrepareOks = numAcceptOks = 0;
         highestPrepareSeqNum = highestAcceptSeqNum = -1;
         highestAcceptValue = new byte[0];
@@ -82,7 +80,6 @@ public class MultiPaxos extends GenericProtocol {
         registerMessageSerializer(cId, AcceptMessage.MSG_ID, AcceptMessage.serializer);
         registerMessageSerializer(cId, AcceptOKMessage.MSG_ID, AcceptOKMessage.serializer);
         registerMessageSerializer(cId, DecidedMessage.MSG_ID, DecidedMessage.serializer);
-        registerMessageSerializer(cId, ForwardMessage.MSG_ID, ForwardMessage.serializer);
         /*---------------------- Register Message Handlers -------------------------- */
         try {
             registerMessageHandler(cId, PrepareMessage.MSG_ID, this::uponPrepareMessage, this::uponMsgFail);
@@ -90,7 +87,6 @@ public class MultiPaxos extends GenericProtocol {
             registerMessageHandler(cId, AcceptMessage.MSG_ID, this::uponAcceptMessage, this::uponMsgFail);
             registerMessageHandler(cId, AcceptOKMessage.MSG_ID, this::uponAcceptOKMessage, this::uponMsgFail);
             registerMessageHandler(cId, DecidedMessage.MSG_ID, this::uponDecidedMessage, this::uponMsgFail);
-            registerMessageHandler(cId, ForwardMessage.MSG_ID, this::uponForwardMessage, this::uponMsgFail);
         } catch (HandlerRegistrationException e) {
             throw new AssertionError("Error registering message handler.", e);
         }
@@ -98,44 +94,13 @@ public class MultiPaxos extends GenericProtocol {
 
     private void uponProposeRequest(ProposeRequest request, short sourceProto) {
         logger.debug("Received " + request);
-
-        //No leader yet
-        if(leader == null) {
-            logger.debug("No leader. Assuming leadership");
-            numPrepareOks = 0;
-            highestAcceptValue = request.getOperation();
-            PaxosMessage msg = new PrepareMessage(request.getInstance(), request.getOpId(), request.getOperation(),
-                    highestPrepareSeqNum + 1);
-            logger.debug("Sending to: " + membership);
-            membership.forEach(h -> sendMessage(msg, h));
-        } else {
-            //I am the current leader
-            if(leader == myself) {
-                numAcceptOks = 0;
-                PaxosMessage msg = new AcceptMessage(request.getInstance(), request.getOpId(), request.getOperation(),
-                        highestPrepareSeqNum + 1);
-                logger.debug("Sending to: " + membership);
-                membership.forEach(h -> sendMessage(msg, h));
-            }
-            //Someone else is the leader
-            else {
-                logger.debug("Redirecting to leader");
-                PaxosMessage msg = new ForwardMessage(request.getInstance(), request.getOpId(), request.getOperation());
-                sendMessage(msg, leader);
-            }
-        }
-    }
-
-    private void uponForwardMessage(ForwardMessage msg, Host host, short sourceProto, int channelId) {
-        numAcceptOks = 0;
-        PaxosMessage msgReply = new AcceptMessage(msg.getInstance(), msg.getOpId(), msg.getOp(), highestPrepareSeqNum + 1);
-        membership.forEach(h -> sendMessage(msgReply, h));
+        highestAcceptValue = request.getOperation();
+        PaxosMessage msg = new PrepareMessage(request.getInstance(), request.getOpId(), request.getOperation(), ++highestPrepareSeqNum);
+        logger.debug("Sending to: " + membership);
+        membership.forEach(h -> sendMessage(msg, h));
     }
 
     private void uponPrepareMessage(PrepareMessage msg, Host host, short sourceProto, int channelId) {
-        if(leader == null) {
-            leader = host;
-        }
         if(msg.getSequenceNumber() > highestPrepareSeqNum) {
             highestPrepareSeqNum = msg.getSequenceNumber();
             PaxosMessage msgReply = new PrepareOKMessage(msg.getInstance(), msg.getOpId(), highestAcceptValue, highestAcceptSeqNum);

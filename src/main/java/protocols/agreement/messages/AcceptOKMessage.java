@@ -10,8 +10,20 @@ public class AcceptOKMessage extends PaxosMessage {
 
     public final static short MSG_ID = 105;
 
+    public AcceptOKMessage(int instance, UUID opId) {
+        this(instance, opId, new byte[0]);
+    }
+
+    public AcceptOKMessage(int instance, UUID opId, int seqNum) {
+        this(instance, opId, new byte[0], seqNum);
+    }
+
     public AcceptOKMessage(int instance, UUID opId, byte[] op) {
-        super(MSG_ID, instance, opId, op);
+        this(instance, opId, op, -1);
+    }
+
+    public AcceptOKMessage(int instance, UUID opId, byte[] op, int seqNum) {
+        super(MSG_ID, instance, opId, op, seqNum);
     }
 
     @Override
@@ -29,8 +41,7 @@ public class AcceptOKMessage extends PaxosMessage {
             out.writeInt(msg.instance);
             out.writeLong(msg.opId.getMostSignificantBits());
             out.writeLong(msg.opId.getLeastSignificantBits());
-            out.writeInt(msg.op.length);
-            out.writeBytes(msg.op);
+            out.writeInt(msg.sequenceNumber);
         }
 
         @Override
@@ -39,9 +50,8 @@ public class AcceptOKMessage extends PaxosMessage {
             long highBytes = in.readLong();
             long lowBytes = in.readLong();
             UUID opId = new UUID(highBytes, lowBytes);
-            byte[] op = new byte[in.readInt()];
-            in.readBytes(op);
-            return new AcceptOKMessage(instance, opId, op);
+            int sequenceNumber = in.readInt();
+            return new AcceptOKMessage(instance, opId, sequenceNumber);
         }
     };
 }
