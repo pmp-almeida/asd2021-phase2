@@ -31,6 +31,7 @@ public class ForwardMessage extends PaxosMessage {
         return "ForwardMessage{" +
                 "opId=" + opId +
                 ", instance=" + instance +
+                ", seqNum=" + sequenceNumber +
                 ", op=" + Hex.encodeHexString(op) +
                 '}';
     }

@@ -1,5 +1,6 @@
 package protocols.agreement;
 
+import org.apache.commons.codec.binary.Hex;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import protocols.agreement.messages.*;
@@ -101,7 +102,9 @@ public class Paxos extends GenericProtocol {
     }
 
     private void uponPrepareMessage(PrepareMessage msg, Host host, short sourceProto, int channelId) {
+        logger.debug("Received " + msg);
         if(msg.getSequenceNumber() > highestPrepareSeqNum) {
+            highestAcceptValue = msg.getOp();
             highestPrepareSeqNum = msg.getSequenceNumber();
             PaxosMessage msgReply = new PrepareOKMessage(msg.getInstance(), msg.getOpId(), highestAcceptValue, highestAcceptSeqNum);
             sendMessage(msgReply, host);
@@ -109,6 +112,7 @@ public class Paxos extends GenericProtocol {
     }
 
     private void uponPrepareOKMessage(PrepareOKMessage msg, Host host, short sourceProto, int channelId) {
+        logger.debug("Received " + msg);
         if(++numPrepareOks >= majority) {
             if(msg.getSequenceNumber() < highestPrepareSeqNum) {
                 highestAcceptValue = msg.getOp();
@@ -120,6 +124,7 @@ public class Paxos extends GenericProtocol {
     }
 
     private void uponAcceptMessage(AcceptMessage msg, Host host, short sourceProto, int channelId) {
+        logger.debug("Received " + msg);
         if(msg.getSequenceNumber() >= highestPrepareSeqNum) {
             highestAcceptSeqNum = msg.getSequenceNumber();
             highestAcceptValue = msg.getOp();
@@ -129,14 +134,16 @@ public class Paxos extends GenericProtocol {
     }
 
     private void uponAcceptOKMessage(AcceptOKMessage msg, Host host, short sourceProto, int channelId) {
+        logger.debug("Received " + msg);
         if(++numAcceptOks > majority) {
-            PaxosMessage msgReply = new DecidedMessage(msg.getInstance(), msg.getOpId(), highestAcceptValue);
+            PaxosMessage msgReply = new DecidedMessage(msg.getInstance(), msg.getOpId(), highestAcceptValue, highestAcceptSeqNum);
             membership.forEach(h -> sendMessage(msgReply, h));
         }
     }
 
     private void uponDecidedMessage(DecidedMessage msg, Host host, short sourceProto, int channelId) {
-        triggerNotification(new DecidedNotification(msg.getInstance(), msg.getOpId(), msg.getOp()));
+        logger.debug("Received " + msg);
+        triggerNotification(new DecidedNotification(msg.getInstance(), msg.getOpId(), highestAcceptValue));
     }
 
     private void uponJoinedNotification(JoinedNotification notification, short sourceProto) {
@@ -144,6 +151,7 @@ public class Paxos extends GenericProtocol {
         joinedInstance = notification.getJoinInstance();
         membership = new LinkedList<>(notification.getMembership());
         logger.info("Agreement starting at instance {},  membership: {}", joinedInstance, membership);
+        verifyMajority();
     }
 
     private void uponAddReplica(AddReplicaRequest request, short sourceProto) {
@@ -173,5 +181,6 @@ public class Paxos extends GenericProtocol {
         } else {
             majority = membership.size() / 2 + 1;
         }
+        logger.info("Majority is now: " + majority);
     }
 }

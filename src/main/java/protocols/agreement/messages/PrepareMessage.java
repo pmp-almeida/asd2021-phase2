@@ -31,6 +31,7 @@ public class PrepareMessage extends PaxosMessage {
         return "PrepareMessage{" +
                 "opId=" + opId +
                 ", instance=" + instance +
+                ", seqNum=" + sequenceNumber +
                 ", op=" + Hex.encodeHexString(op) +
                 '}';
     }
@@ -42,6 +43,8 @@ public class PrepareMessage extends PaxosMessage {
             out.writeLong(msg.opId.getMostSignificantBits());
             out.writeLong(msg.opId.getLeastSignificantBits());
             out.writeInt(msg.sequenceNumber);
+            out.writeInt(msg.op.length);
+            out.writeBytes(msg.op);
         }
 
         @Override
@@ -51,7 +54,9 @@ public class PrepareMessage extends PaxosMessage {
             long lowBytes = in.readLong();
             UUID opId = new UUID(highBytes, lowBytes);
             int sequenceNumber = in.readInt();
-            return new PrepareMessage(instance, opId, sequenceNumber);
+            byte[] op = new byte[in.readInt()];
+            in.readBytes(op);
+            return new PrepareMessage(instance, opId, op, sequenceNumber);
         }
     };
 }

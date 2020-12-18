@@ -31,6 +31,7 @@ public class AcceptMessage extends PaxosMessage {
         return "AcceptMessage{" +
                 "opId=" + opId +
                 ", instance=" + instance +
+                ", seqNum=" + sequenceNumber +
                 ", op=" + Hex.encodeHexString(op) +
                 '}';
     }

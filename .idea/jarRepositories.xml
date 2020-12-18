@@ -8,6 +8,11 @@
     </remote-repository>
     <remote-repository>
       <option name="id" value="asd19" />
+      <option name="name" value="pt.unl.fct.di.novasys" />
+      <option name="url" value="https://asc.di.fct.unl.pt/~jleitao/mvn-repo/" />
+    </remote-repository>
+    <remote-repository>
+      <option name="id" value="asd19" />
       <option name="name" value="asd19" />
       <option name="url" value="https://asc.di.fct.unl.pt/~jleitao/mvn-repo/" />
     </remote-repository>

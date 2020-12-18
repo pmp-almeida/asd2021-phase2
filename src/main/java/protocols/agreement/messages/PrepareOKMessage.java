@@ -32,6 +32,7 @@ public class PrepareOKMessage extends PaxosMessage {
         return "PrepareOKMessage{" +
                 "opId=" + opId +
                 ", instance=" + instance +
+                ", seqNum=" + sequenceNumber +
                 ", op=" + Hex.encodeHexString(op) +
                 '}';
     }

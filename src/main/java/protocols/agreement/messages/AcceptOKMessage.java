@@ -31,6 +31,7 @@ public class AcceptOKMessage extends PaxosMessage {
         return "AcceptOKMessage{" +
                 "opId=" + opId +
                 ", instance=" + instance +
+                ", seqNum=" + sequenceNumber +
                 ", op=" + Hex.encodeHexString(op) +
                 '}';
     }
