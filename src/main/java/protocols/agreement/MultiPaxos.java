@@ -137,6 +137,7 @@ public class MultiPaxos extends GenericProtocol {
             leader = host;
         }
         if(msg.getSequenceNumber() > highestPrepareSeqNum) {
+            highestAcceptValue = msg.getOp();
             highestPrepareSeqNum = msg.getSequenceNumber();
             PaxosMessage msgReply = new PrepareOKMessage(msg.getInstance(), msg.getOpId(), highestAcceptValue, highestAcceptSeqNum);
             sendMessage(msgReply, host);
@@ -179,6 +180,7 @@ public class MultiPaxos extends GenericProtocol {
         joinedInstance = notification.getJoinInstance();
         membership = new LinkedList<>(notification.getMembership());
         logger.info("Agreement starting at instance {},  membership: {}", joinedInstance, membership);
+        verifyMajority();
     }
 
     private void uponAddReplica(AddReplicaRequest request, short sourceProto) {
