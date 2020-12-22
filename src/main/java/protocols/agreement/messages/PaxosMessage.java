@@ -11,6 +11,14 @@ public class PaxosMessage extends ProtoMessage {
     protected final byte[] op;
     protected final int sequenceNumber;
 
+    public PaxosMessage(short ID, int instance, UUID opId, int seqNum) {
+        this(ID, instance, opId, new byte[0], seqNum);
+    }
+
+    public PaxosMessage(short ID, int instance, UUID opId, byte[] op) {
+        this(ID, instance, opId, op, -1);
+    }
+
     public PaxosMessage(short ID, int instance, UUID opId, byte[] op, int seqNum) {
         super(ID);
         this.instance = instance;

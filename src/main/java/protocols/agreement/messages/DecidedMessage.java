@@ -10,20 +10,8 @@ public class DecidedMessage extends PaxosMessage {
 
     public final static short MSG_ID = 106;
 
-    public DecidedMessage(int instance, UUID opId) {
-        this(instance, opId, new byte[0]);
-    }
-
-    public DecidedMessage(int instance, UUID opId, int seqNum) {
-        this(instance, opId, new byte[0], seqNum);
-    }
-
     public DecidedMessage(int instance, UUID opId, byte[] op) {
-        this(instance, opId, op, -1);
-    }
-
-    public DecidedMessage(int instance, UUID opId, byte[] op, int seqNum) {
-        super(MSG_ID, instance, opId, op, seqNum);
+        super(MSG_ID, instance, opId, op);
     }
 
     @Override

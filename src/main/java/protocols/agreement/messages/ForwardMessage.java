@@ -10,14 +10,6 @@ public class ForwardMessage extends PaxosMessage {
 
     public final static short MSG_ID = 107;
 
-    public ForwardMessage(int instance, UUID opId) {
-        this(instance, opId, new byte[0]);
-    }
-
-    public ForwardMessage(int instance, UUID opId, int seqNum) {
-        this(instance, opId, new byte[0], seqNum);
-    }
-
     public ForwardMessage(int instance, UUID opId, byte[] op) {
         this(instance, opId, op, -1);
     }

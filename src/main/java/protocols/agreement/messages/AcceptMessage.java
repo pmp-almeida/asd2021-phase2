@@ -10,18 +10,6 @@ public class AcceptMessage extends PaxosMessage {
 
     public final static short MSG_ID = 104;
 
-    public AcceptMessage(int instance, UUID opId) {
-        this(instance, opId, new byte[0]);
-    }
-
-    public AcceptMessage(int instance, UUID opId, int seqNum) {
-        this(instance, opId, new byte[0], seqNum);
-    }
-
-    public AcceptMessage(int instance, UUID opId, byte[] op) {
-        this(instance, opId, op, -1);
-    }
-
     public AcceptMessage(int instance, UUID opId, byte[] op, int seqNum) {
         super(MSG_ID, instance, opId, op, seqNum);
     }
@@ -40,9 +28,9 @@ public class AcceptMessage extends PaxosMessage {
         @Override
         public void serialize(AcceptMessage msg, ByteBuf out) {
             out.writeInt(msg.instance);
+            out.writeInt(msg.sequenceNumber);
             out.writeLong(msg.opId.getMostSignificantBits());
             out.writeLong(msg.opId.getLeastSignificantBits());
-            out.writeInt(msg.sequenceNumber);
             out.writeInt(msg.op.length);
             out.writeBytes(msg.op);
         }
@@ -50,10 +38,10 @@ public class AcceptMessage extends PaxosMessage {
         @Override
         public AcceptMessage deserialize(ByteBuf in) {
             int instance = in.readInt();
+            int sequenceNumber = in.readInt();
             long highBytes = in.readLong();
             long lowBytes = in.readLong();
             UUID opId = new UUID(highBytes, lowBytes);
-            int sequenceNumber = in.readInt();
             byte[] op = new byte[in.readInt()];
             in.readBytes(op);
             return new AcceptMessage(instance, opId, op, sequenceNumber);

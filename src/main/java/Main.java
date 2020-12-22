@@ -1,9 +1,7 @@
-import protocols.agreement.MultiPaxos;
 import protocols.agreement.Paxos;
 import pt.unl.fct.di.novasys.babel.core.Babel;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import protocols.agreement.IncorrectAgreement;
 import protocols.app.HashApp;
 import protocols.statemachine.StateMachine;
 
@@ -48,8 +46,8 @@ public class Main {
         StateMachine sm = new StateMachine(props);
         // Agreement Protocol
         //IncorrectAgreement agreement = new IncorrectAgreement(props);
-        MultiPaxos agreement = new MultiPaxos(props);
-        //Paxos agreement = new Paxos(props);
+        //MultiPaxos agreement = new MultiPaxos(props);
+        Paxos agreement = new Paxos(props);
 
         //Register applications in babel
         babel.registerProtocol(hashApp);
